@@ -1,6 +1,10 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <filesystem>
+#include <vector>
+
+using namespace std;
 
 // Function to open a file and return the input file stream
 std::ifstream openFile(const std::string& fileName) {
@@ -11,20 +15,28 @@ std::ifstream openFile(const std::string& fileName) {
     return inFile;
 }
 
-int main() {
-    const std::string fileName = "input.txt"; // Specify the file name
+// Function to read a file line by line and process each line
+vector<string> readFileLineByLine(const std::string& fileName) {
     std::ifstream inFile = openFile(fileName);
-    if (!inFile.is_open()) {
-        return 1; 
-    }
-    //read line by line
-    std::string line;
-    while (std::getline(inFile, line)) {
-        std::cout << line << std::endl; 
-    }
 
-    //MAIN
+    std::string line;
+    vector<string> lines;
+    while (std::getline(inFile, line)) {
+        // Process the line
+        lines.push_back(line);
+        std::cout << line << std::endl;
+    }
 
     inFile.close();
+    return lines;
+}
+
+int main() {
+    const std::string fileName = "input"; // Specify the file name
+    const std::string path = "C:/Users/uniho/OneDrive/Documents/AoC-2024/Day1/" + fileName + ".txt";
+    vector<string> inputLines = readFileLineByLine(path);
+
+    // MAIN: Add your logic here
+
     return 0;
 }

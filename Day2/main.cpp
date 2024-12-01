@@ -37,29 +37,6 @@ int main() {
     const std::string path = "C:/Users/uniho/OneDrive/Documents/AoC-2024/Day1/" + fileName + ".txt";
     std::ifstream inFile = openFile(path);
 
-    // MAIN: Add your logic here
-    vector<int> firstCol;
-    vector<int> secondCol;
-    int first, second;
-    while(inFile >> first >> second){
-        firstCol.push_back(first);
-        secondCol.push_back(second);
-    }
-    sort(firstCol.begin(), firstCol.end());
-    sort(secondCol.begin(), secondCol.end());
-
-    int64_t difference = 0;
-    for(int i = 0; i<firstCol.size(); i++){
-        int curr = firstCol[i];
-        int count = 0;
-        for(int j = 0; j<secondCol.size(); j++){
-            if(secondCol[j] == curr){
-                count++;
-            }
-        }
-        difference += curr * count;
-    }
-    cout << difference;
 
     inFile.close();
 

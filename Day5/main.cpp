@@ -33,6 +33,27 @@ vector<string> readFileLineByLine(const std::string& fileName) {
     return lines;
 }
 
+bool swapInvalid(vector<int> &update, unordered_map<int, vector<int>> rules){
+        // Iterate through the update vector from back to front
+    bool found_invalid =false;
+    for (size_t i = update.size() - 1; i > 0; --i) {
+        int key = update[i];
+        for (int j = i-1; j >= 0; --j) {
+            int query = update[j];
+            for(int k = 0; k<rules[key].size(); k++){
+                if(rules[key][k] == query){
+                    //swap
+                    found_invalid =true;
+                    int old_j = update[j];
+                    update[j] = update[i];
+                    update[i] = old_j;
+                }
+            }
+        }
+    }
+    return found_invalid;
+}
+
 int main() {
     const std::string fileName = "input"; // Specify the file name
     const std::string path = fileName + ".txt";
@@ -74,26 +95,19 @@ int main() {
 
     //check for each update if it is valid & retun middle number
     int result = 0;
-    for(auto it = updates.cbegin(); it != updates.cend(); it++){
-        bool valid = true;
-        set<int> numbers_before;
-        for(int i = it->size()-2; i >= 0; i--){
-            numbers_before.insert(it->at(i));
-        }
-        //check for each key if any value exists
-        for(int i = it->size()-1; i >= 0; i--){
-            vector<int> curr_rules = rules[it->at(i)];
-            for(auto it2 = curr_rules.cbegin(); it2!=curr_rules.cend(); it2++){
-                if(numbers_before.count(*it2) > 0){
-                    //rule break!
-                    //swap & restart
-                    valid = false;
-                    break;
-                }
+    for(auto it = updates.begin(); it != updates.end(); it++){
+        bool invalid = false;
+        bool once_invalid = false;
+        do{
+            invalid = swapInvalid(*it, rules);
+            if(invalid){
+                once_invalid = true;
             }
-            numbers_before.erase(it->at(i));
-        }
-        if(valid){
+        }while(invalid);
+
+        
+        if(once_invalid){
+
             int mid_value = it->at(it->size() / 2);
             result += mid_value;
         }

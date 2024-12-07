@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <set>
 #include <cmath>
+#include <chrono>
+
 
 
 using namespace std;
@@ -86,6 +88,9 @@ int main() {
                 else{
                     long long result_old = result;
                     result = concatenate(result, numbers[i]);
+                }
+                if(result > goal){
+                    break;
                 }
             }
             if(result == goal){

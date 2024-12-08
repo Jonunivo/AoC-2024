@@ -73,18 +73,13 @@ int main() {
         vector<pair<int,int>> positions = it->second;
         for(int i = 0; i < positions.size(); i++){
             for(int j = i+1; j<positions.size(); j++){
-                int minX = min(positions[i].first, positions[j].first); 
-                int minY = min(positions[i].second, positions[j].second); 
-                int maxX = max(positions[i].first, positions[j].first); 
-                int maxY = max(positions[i].second, positions[j].second); 
-                int deltaX = positions[j].first - positions[i].first;
-                int deltaY = positions[j].second - positions[i].second;
-                //set antinodes
-
                 int firstPosX = positions[i].first;
                 int firstPosY = positions[i].second;
                 int secondPosX = positions[j].first;
                 int secondPosY = positions[j].second;
+                int deltaX = secondPosX - firstPosX;
+                int deltaY = secondPosY - firstPosY;
+                //set antinodes
                 while(firstPosX >= 0 && firstPosX < numRows && firstPosY >= 0 && firstPosY < numCols){
                     antinodes[firstPosX][firstPosY] = true;
                     firstPosX -= deltaX;
@@ -107,7 +102,7 @@ int main() {
                 count++;
             }
             else{
-                cout << "o";
+                cout << ".";
             }
         }
         cout << "\n";

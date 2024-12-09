@@ -8,6 +8,9 @@
 
 using namespace std;
 
+//This file outputs   6289587115689 for part 2 (too high)
+//the actual solution 6289564433984 
+
 // Function to open a file and return the input file stream
 std::ifstream openFile(const std::string& fileName) {
     std::ifstream inFile(fileName);

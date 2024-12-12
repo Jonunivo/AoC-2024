@@ -148,21 +148,12 @@ int countSidesHorizontal(vector<pair<int,int>> &perimeter_map){
         return a.first < b.first;
     });
 
-    bool duplicate = false;
-
     for (auto it = perimeter_map.begin(); it != perimeter_map.end(); ++it) {
         auto next_it = std::next(it); 
         if (next_it != perimeter_map.end()) {
             if (next_it->first != it->first) {
                 //vertical step
-                if(duplicate){
-                    counter++;
-                }
                 counter++;
-                duplicate = false;
-            }
-            else if(next_it->second == it->second){
-                duplicate = true;
             }
             else if (next_it->second != it->second + 1) {
                 //gap > 1
@@ -238,16 +229,18 @@ int main() {
         }
     }
 
-    vector<vector<bool>> visited(maxi, vector<bool>(maxj));
+    vector<vector<bool>> visited(maxi, vector<bool>(maxj, false));
     //BFS 
+    vector<pair<int,int>> perimeter_map_vertical;
+    vector<pair<int,int>> perimeter_map_horizontal;
     int final_result = 0;
     for(int i = 0; i<maxi; i++){
         for(int j = 0; j<maxj; j++){
             if(visited[i][j]){
                 continue;
             }
-            vector<pair<int,int>> perimeter_map_vertical;
-            vector<pair<int,int>> perimeter_map_horizontal;
+            perimeter_map_vertical.clear();
+            perimeter_map_horizontal.clear();
 
             pair<int,int> result = bfs(perimeter_map_vertical, perimeter_map_horizontal, visited, grid, i, j, maxi, maxj);
             //count sides of perimeter_map

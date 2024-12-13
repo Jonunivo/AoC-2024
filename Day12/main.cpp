@@ -214,7 +214,7 @@ int countSidesVertical(vector<pair<int,int>> &perimeter_map){
 }
 
 int main() {
-    const std::string fileName = "input"; // Specify the file name
+    const std::string fileName = "sample"; // Specify the file name
     const std::string path = fileName + ".txt";
     std::ifstream inFile = openFile(path);
     vector<string> lines = readFileLineByLine(path);

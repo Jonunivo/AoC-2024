@@ -1,6 +1,7 @@
-AAAAAA
-AAABBA
-AAABBA
-ABBAAA
-ABBAAA
-AAAAAA
+.....
+.AAA.
+.A.A.
+.AA..
+.A.A.
+.AAA.
+.....

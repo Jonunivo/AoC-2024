@@ -238,7 +238,6 @@ int main()
 
 
     int start_node = start.first*lines.size() + start.second + grid_size;
-    cout << start_node << "\n";
     std::vector<int> end_nodes = {
         end.first * (int)lines.size() + end.second,             // North (level 0)
         end.first * (int)lines.size() + end.second + grid_size, // East (level 1)
@@ -246,6 +245,7 @@ int main()
         end.first * (int)lines.size() + end.second + 3 * grid_size  // West (level 3)
     };
     int shortest_distance = dijkstra_paths_and_mark(G, start_node, end_nodes, visited, lines[0].size(), lines.size());
+    cout << "shortest dist: " << shortest_distance << "\n";
 
     int visited_count = 0;
     for (const auto& row : visited) {

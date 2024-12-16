@@ -74,14 +74,75 @@ vector<string> readFileLineByLine(const std::string& fileName) {
     return lines;
 }
 
-// Flattening function for (i, j) position
-auto get_flat_index = [&](int i, int j, int len) {
-    return i * len + j;
-};
+int dijkstra_paths_and_mark(const weighted_graph &G, int s, const vector<int> &end_nodes,
+                            vector<vector<bool>> &visited, int grid_width, int grid_height) {
+    int n = boost::num_vertices(G);
+    std::vector<int> dist_map(n, std::numeric_limits<int>::max());
+    std::vector<std::set<int>> pred_map(n); // Store all predecessors
 
-// Direction vectors for neighbors (up, left, down, right)
-const int DX[4] = {-1, 0, 1, 0};
-const int DY[4] = {0, -1, 0, 1};
+    // Priority queue for Dijkstra
+    using state = std::pair<int, int>; // (distance, vertex)
+    std::priority_queue<state, std::vector<state>, std::greater<>> pq;
+    pq.emplace(0, s);
+    dist_map[s] = 0;
+
+    while (!pq.empty()) {
+        std::pair<int, int> top = pq.top();
+        int dist = top.first;
+        int u = top.second;
+        pq.pop();
+
+        if (dist > dist_map[u]) continue; // Skip outdated entries
+
+        for (auto edge : boost::make_iterator_range(boost::out_edges(u, G))) {
+            int v = boost::target(edge, G);
+            int weight = boost::get(boost::edge_weight, G, edge);
+
+            if (dist_map[u] + weight < dist_map[v]) {
+                dist_map[v] = dist_map[u] + weight;
+                pred_map[v].clear();
+                pred_map[v].insert(u);
+                pq.emplace(dist_map[v], v);
+            } else if (dist_map[u] + weight == dist_map[v]) {
+                pred_map[v].insert(u); // Add alternative predecessor
+            }
+        }
+    }
+
+    int shortest_distance = std::numeric_limits<int>::max();
+    for (int end_node : end_nodes) {
+        if (dist_map[end_node] < shortest_distance) {
+            shortest_distance = dist_map[end_node];
+        }
+    }
+
+    auto mark_path = [&](int x, int y) {
+        if (x >= 0 && x < grid_height && y >= 0 && y < grid_width) {
+            visited[x][y] = true;
+        }
+    };
+
+    // Recursive function to explore all paths
+    std::function<void(int)> explore_paths = [&](int v) {
+        int flat_index = v % (grid_width * grid_height);
+        int x = flat_index / grid_width;
+        int y = flat_index % grid_width;
+        mark_path(x, y);
+
+        for (int pred : pred_map[v]) {
+            explore_paths(pred);
+        }
+    };
+
+    for (int end_node : end_nodes) {
+        if (dist_map[end_node] == shortest_distance) {
+            explore_paths(end_node);
+        }
+    }
+
+    return shortest_distance;
+}
+
 
 int main()
 {
@@ -171,20 +232,10 @@ int main()
     }
 
 
-    std::vector<std::vector<bool>> visited(lines.size(), std::vector<bool>(lines[0].size(), false));
-    // A helper lambda function to mark tiles visited
-    auto mark_visited = [&](const std::vector<vertex_desc>& path) {
-        for (int flat_index : path) {
-            // Map the flat index back to grid coordinates and level
-            int level = flat_index / grid_size;
-            int grid_index = flat_index % grid_size;
-            int x = grid_index / lines.size();
-            int y = grid_index % lines.size();
-            
-            // Mark the tile visited if it belongs to any shortest path
-            visited[x][y] = true;
-        }
-    };
+    vector<vector<bool>> visited(lines.size(), vector<bool>(lines[0].size(), false));
+
+
+
 
     int start_node = start.first*lines.size() + start.second + grid_size;
     cout << start_node << "\n";
@@ -194,16 +245,14 @@ int main()
         end.first * (int)lines.size() + end.second + 2 * grid_size, // South (level 2)
         end.first * (int)lines.size() + end.second + 3 * grid_size  // West (level 3)
     };
-    int shortest_distance = std::numeric_limits<int>::max();
-    for (int end_node : end_nodes) {
-        cout << end_node << " ";
-        int curr = dijkstra_dist(G, start_node, end_node);
-        if (curr < shortest_distance) {
-            shortest_distance = curr;
-        }
+    int shortest_distance = dijkstra_paths_and_mark(G, start_node, end_nodes, visited, lines[0].size(), lines.size());
+
+    int visited_count = 0;
+    for (const auto& row : visited) {
+        visited_count += std::count(row.begin(), row.end(), true);
     }
     
-    std::cout <<"\n" <<  shortest_distance << "\n";
+    std::cout << "Tiles visited by any shortest path: " << visited_count << "\n";
 
 
   return 0;

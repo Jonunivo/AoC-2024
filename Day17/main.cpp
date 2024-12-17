@@ -35,45 +35,45 @@ vector<string> readFileLineByLine(const std::string& fileName) {
 }
 
 //opCode 0
-void adv(int& A, int& B, int combo){
-    int denominator = 1 << combo;
+void adv(long long& A, long long& B, long long combo){
+    long long denominator = 1 << combo;
     A = A / denominator;
 }
 //opCode 1
-void bxl(int& B, int literal){
+void bxl(long long& B, long long literal){
     B = B ^ literal;
 }
 //opCode 2
-void bst(int& B, int combo){
+void bst(long long& B, long long combo){
     B = combo%8;
 }
 //opCode 3
-void jnz(int& A, int& instruction_pointer, int literal){
+void jnz(long long& A, long long& instruction_pointer, long long literal){
     if(A != 0){
         instruction_pointer = literal - 2;
     }
 }
 //opCode 4
-void bxc(int& B, int& C, int operand){
+void bxc(long long& B, long long& C, long long operand){
     B = B ^ C;
 }
 //opCode 5
-void out(int combo){
+void out(long long combo){
     //cout << combo%8 << ",";
 }
 //opCode 6
-void bdv(int& A, int& B, int combo){
-    int denominator = 1 << combo;
+void bdv(long long& A, long long& B, long long combo){
+    long long denominator = 1 << combo;
     B = A / denominator;
 }
 //opCode 7
-void cdv(int& A, int& C, int combo){
-    int denominator = 1 << combo;
+void cdv(long long& A, long long& C, long long combo){
+    long long denominator = 1 << combo;
     C = A / denominator;
 }
 
 //combo
-int calcCombo(int literal, int& A, int& B, int& C) {
+long long calcCombo(long long literal, long long& A, long long& B, long long& C) {
     switch(literal) {
         case 0:
         case 1:
@@ -93,16 +93,16 @@ int calcCombo(int literal, int& A, int& B, int& C) {
     }
 }
 
-vector<int> simulateProgram(long initialA, const vector<int>& program) {
-    int A = initialA;
-    int B = 0;
-    int C = 0;
-    int instruction_pointer = 0;
-    vector<int> output;
+vector<long long> simulateProgram(long initialA, const vector<long long>& program) {
+    long long A = initialA;
+    long long B = 0;
+    long long C = 0;
+    long long instruction_pointer = 0;
+    vector<long long> output;
 
     while (instruction_pointer < program.size() - 1) {
-        int literal = program[instruction_pointer + 1];
-        int combo = calcCombo(literal, A, B, C);
+        long long literal = program[instruction_pointer + 1];
+        long long combo = calcCombo(literal, A, B, C);
         switch (program[instruction_pointer]) {
             case 0: adv(A, B, combo); break;
             case 1: bxl(B, literal); break;
@@ -118,22 +118,73 @@ vector<int> simulateProgram(long initialA, const vector<int>& program) {
     return output;
 }
 
-int findInitialA(const vector<int>& program) {
-    int lowestA = pow(2,15);
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+long long numMatch(const std::vector<long long> &pred, const std::vector<long long> &gold) {
+  long long i{static_cast<long long>(gold.size() - 1)};
+  long long j{static_cast<long long>(pred.size() - 1)};
+  long long num{0};
+  while (i >= 0 && j >= 0) {
+    if (gold[i] != pred[j]) {
+      return num;
+    }
+    ++num;
+    --j;
+    --i;
+  }
+  return num;
+}
+
+long long findInitialA(const vector<long long>& program) {
+    long a{0};
+    long long a7{0};
+    long long n{0};
+
     while (true) {
-        vector<int> output = simulateProgram(lowestA, program);
+        vector<long long> output = simulateProgram(a, program);
 
-        if (output == vector<int>(program.begin(), program.end())) {
-            return lowestA;
-        }
-        // Increment and try the next value for register A
-        lowestA++;
+        int nMatch{numMatch(output, program)};
+        if(nMatch > n){
 
-        if(lowestA % 100000 == 0){
-            cout << lowestA << "\n";
+            // Debugging prints
+            cout << "Current A: " << a << "\n";
+            cout << "Output:    ";
+            for (int i = output.size() - 1; i >= 0; --i) {
+                cout << output[i] << " ";
+            }
+            cout << "\n";
+            cout << "Program:   ";
+            for (int i = program.size() - 1; i >= 0; --i) {
+                cout << program[i] << " ";
+            }
+            cout << "\n";
+            cout << "nMatch:    " << nMatch << "\n";
+            cout << "-------------------------------------------"  << "\n";
+
+            if(nMatch == 16){
+                return a;
+            }
+            n = nMatch;
+            a <<= 3;
         }
+        else if(a7 == 7){
+            //not found, backtrack!
+            a >>= 3;
+            ++a;
+            --n;
+        }
+        else{
+            //keep searching
+            ++a;
+        }
+        a7 = a & 7;
     }
 }
+
 
 int main()
 {
@@ -142,9 +193,9 @@ int main()
     std::ifstream inFile = openFile(path);
     vector<string> lines = readFileLineByLine(path);
     
-    int instruction_pointer = 0;
-    int A, B, C;
-    vector<int> program;
+    long long instruction_pointer = 0;
+    long long A, B, C;
+    vector<long long> program;
 
     //Read Input
     istringstream registerA(lines[0]);
@@ -158,14 +209,14 @@ int main()
     registerC >> temp >> temp; 
     registerC >> C;
     istringstream programLine(lines[4].substr(9)); 
-    int value;
+    long long value;
     while (programLine >> value) {
         program.push_back(value);
         if (programLine.peek() == ',') programLine.ignore(); // Ignore commas
     }
 
     //run program
-    int correctA = findInitialA(program);
+    long long correctA = findInitialA(program);
     cout << "The lowest initial value for register A that outputs the program is: " << correctA << endl;
 
 

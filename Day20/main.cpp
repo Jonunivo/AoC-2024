@@ -76,8 +76,7 @@ vector<string> readFileLineByLine(const std::string& fileName) {
     return lines;
 }
 
-//Part 1 works, but it is painfully slow.. (mainly because i just copied dijkstra, but bfs would be enough)
-//Part 2 tbd
+//both parts done. Note that dijkstra was only used as it was useful in earlier problems and i copied it. The problem description would allow for BFS or DFS
 
 int main()
 {
@@ -137,8 +136,8 @@ int main()
     int no_cheat_speed = dist_from_start[end_i];
     cout << "No cheat speed: " << no_cheat_speed << "\n";
 
-    //for every pair i,j of track, check if their manhatten distance is <= 20
-    //if yes, calculate dist_from_start[i] + dist_from_end[j], if that is > 50 smaller than the no cheat speed, save it to cheat_times
+    //Idea: for every pair i,j of track, check if their manhatten distance is <= 20
+    //if yes, calculate dist_from_start[i] + dist_from_end[j] + manhatten_dist(i,j), if that is > 100 smaller than the no cheat speed, save it to cheat_times
     vector<pair<int, int>> cheat_pairs;
     vector<int> cheat_times;
 

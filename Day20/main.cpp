@@ -5,6 +5,7 @@
 #include <string>
 #include <queue>
 #include <set>
+#include <cmath>
 
 // BGL includes
 #include <boost/graph/adjacency_list.hpp>
@@ -16,15 +17,15 @@ typedef boost::property_map<weighted_graph, boost::edge_weight_t>::type weight_m
 typedef boost::graph_traits<weighted_graph>::edge_descriptor            edge_desc;
 typedef boost::graph_traits<weighted_graph>::vertex_descriptor          vertex_desc;
 
-int dijkstra_dist(const weighted_graph &G, int s, int t) {
-  int n = boost::num_vertices(G);
-  std::vector<int> dist_map(n);
+std::vector<int> dijkstra_dist(const weighted_graph &G, int s) {
+    int n = boost::num_vertices(G);
+    std::vector<int> dist_map(n);
 
-  boost::dijkstra_shortest_paths(G, s,
-    boost::distance_map(boost::make_iterator_property_map(
-      dist_map.begin(), boost::get(boost::vertex_index, G))));
+    boost::dijkstra_shortest_paths(G, s,
+        boost::distance_map(boost::make_iterator_property_map(
+        dist_map.begin(), boost::get(boost::vertex_index, G))));
 
-  return dist_map[t];
+    return dist_map;
 }
 
 int dijkstra_path(const weighted_graph &G, int s, int t, std::vector<vertex_desc> &path) {
@@ -107,10 +108,6 @@ int main()
     weighted_graph G(size_x * size_y);
     weight_map weights;
 
-
-    vector<pair<int,int>> cheat_paths_h;
-    vector<pair<int,int>> cheat_paths_v;
-
     for(int x = 1; x<size_x-1; x++){
         for(int y = 1; y<size_y-1; y++){
             if(!nodes[x][y]){
@@ -128,93 +125,68 @@ int main()
                 edge_desc e = boost::add_edge(from, to, G).first; weights[e] = 1;
                 edge_desc e2 = boost::add_edge(to, from, G).first; weights[e2] = 1;
             }
-            if(!nodes[x+1][y] && x+2 < size_x && nodes[x+2][y]){
-                cheat_paths_h.push_back(make_pair(x+1, y));
-            }
-            if(!nodes[x][y+1] && y+2 < size_y && nodes[x][y+2]){
-                cheat_paths_v.push_back(make_pair(x, y+1));
-            }
         }
     }
 
     int start_i = start.first*size_y + start.second;
     int end_i = end.first*size_y + end.second;
 
-    int no_cheat_speed = dijkstra_dist(G, start_i, end_i);
+
+    vector<int> dist_from_start = dijkstra_dist(G, start_i);
+    vector<int> dist_from_end = dijkstra_dist(G, end_i);
+    int no_cheat_speed = dist_from_start[end_i];
     cout << "No cheat speed: " << no_cheat_speed << "\n";
 
-    //Cheat Horizontally:
-    vector<int> time_saved;
-    for(int i = 0; i<cheat_paths_h.size(); i++){
-        int wall_x = cheat_paths_h[i].first;
-        int wall_y = cheat_paths_h[i].second;
-        //cheat in one direction
-        int from = (wall_x-1)*size_y + wall_y;
-        int to = wall_x*size_y + wall_y;
-        edge_desc e = boost::add_edge(from, to, G).first; weights[e] = 1;
-        from = wall_x*size_y + wall_y;
-        to = (wall_x+1)*size_y + wall_y;
-        edge_desc e2 = boost::add_edge(from, to, G).first; weights[e2] = 1;
-        int cheat_speed = dijkstra_dist(G, start_i, end_i);
-        if(no_cheat_speed - cheat_speed >= 100){
-            time_saved.push_back(no_cheat_speed - cheat_speed);
-        }
-        //remove the edges e & e2 again
-        boost::remove_edge(e, G);
-        boost::remove_edge(e2, G);
+    //for every pair i,j of track, check if their manhatten distance is <= 20
+    //if yes, calculate dist_from_start[i] + dist_from_end[j], if that is > 50 smaller than the no cheat speed, save it to cheat_times
+    vector<pair<int, int>> cheat_pairs;
+    vector<int> cheat_times;
 
-        //cheat in opposite direction
-        from = (wall_x+1)*size_y + wall_y;
-        to = wall_x*size_y + wall_y;
-        edge_desc e3 = boost::add_edge(from, to, G).first; weights[e3] = 1;
-        from = wall_x*size_y + wall_y;
-        to = (wall_x-1)*size_y + wall_y;
-        edge_desc e4 = boost::add_edge(from, to, G).first; weights[e4] = 1;
-        cheat_speed = dijkstra_dist(G, start_i, end_i);
-        if(no_cheat_speed - cheat_speed >= 100){
-            time_saved.push_back(no_cheat_speed - cheat_speed);
+    //for Part 1: set maxSteps to 2 
+    //for Part 2: set maxSteps to 20
+    int maxSteps = 20;
+    int minSaved = 100;
+    int sol = 0;
+
+    std::map<int, int> cheat_savings_count;
+
+    // Loop through all grid cells
+    for (int i = 0; i < size_x; i++) {
+        for (int j = 0; j < size_y; j++) {
+            if (lines[j][i] == '#') continue;
+
+            for (int k = std::max(0, i - maxSteps); k <= std::min(size_x - 1, i + maxSteps); k++) {
+                for (int l = std::max(0, j - maxSteps); l <= std::min(size_y - 1, j + maxSteps); l++) {
+                    if (k < 0 || k >= size_x || l < 0 || l >= size_y) continue;
+
+                    if (lines[l][k] == '#') continue;
+
+                    int manhattan_distance = abs(i - k) + abs(j - l);
+                    if (manhattan_distance > maxSteps) continue;
+
+                    int dist_start = dist_from_start[i * size_y + j];
+                    int dist_end = dist_from_end[k * size_y + l];
+                    if (dist_start < 0 || dist_end < 0) continue;
+
+                    int cheat = dist_start + dist_end + manhattan_distance;
+                    int savings = no_cheat_speed - cheat;
+
+                    if (savings >= minSaved) {
+                        sol++;
+                        cheat_savings_count[savings]++;
+                    }
+                }
+            }
         }
-        boost::remove_edge(e3, G);
-        boost::remove_edge(e4, G);
     }
 
-    //Cheat vertically:
-    for(int i = 0; i<cheat_paths_v.size(); i++){
-        int wall_x = cheat_paths_v[i].first;
-        int wall_y = cheat_paths_v[i].second;
-        //cheat in one direction
-        int from = wall_x*size_y + wall_y - 1;
-        int to = wall_x*size_y + wall_y ;
-        edge_desc e = boost::add_edge(from, to, G).first; weights[e] = 1;
-        from = wall_x*size_y + wall_y;
-        to = wall_x*size_y + wall_y + 1;
-        edge_desc e2 = boost::add_edge(from, to, G).first; weights[e2] = 1;
-        int cheat_speed = dijkstra_dist(G, start_i, end_i);
-        if(no_cheat_speed - cheat_speed >= 100){
-            time_saved.push_back(no_cheat_speed - cheat_speed);
-        }
-        //remove the edges e & e2 again
-        boost::remove_edge(e, G);
-        boost::remove_edge(e2, G);
-
-        //cheat in opposite direction
-        from = wall_x*size_y + wall_y + 1;
-        to = wall_x*size_y + wall_y;
-        edge_desc e3 = boost::add_edge(from, to, G).first; weights[e3] = 1;
-        from = wall_x*size_y + wall_y;
-        to = wall_x*size_y + wall_y - 1;
-        edge_desc e4 = boost::add_edge(from, to, G).first; weights[e4] = 1;
-        cheat_speed = dijkstra_dist(G, start_i, end_i);
-        if(no_cheat_speed - cheat_speed >= 100){
-            time_saved.push_back(no_cheat_speed - cheat_speed);
-        }
-        //remove the edges e & e2 again
-        boost::remove_edge(e3, G);
-        boost::remove_edge(e4, G);
+    int final_result = 0;
+    for (const auto& [savings, count] : cheat_savings_count) {
+        cout << "There are " << count << " cheats that save " << savings << " picoseconds.\n";
+        final_result += count;
     }
+    cout << "Total: " << final_result << "\n";
 
-
-    cout << time_saved.size() << "\n";
 
     inFile.close();
 

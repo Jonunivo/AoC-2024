@@ -162,7 +162,7 @@ int main() {
         }
     }
 
-    // Process each operation
+    //PART 1
     while (!operations.empty()) {
         vector<tuple<string, string, string, string>> remainingOperations; // Hold operations that can't be processed yet
 
@@ -188,23 +188,14 @@ int main() {
         }
     }
     sort(zVariables.rbegin(), zVariables.rend());
-
-    // Print all 'z' variables
     cout << "Variables starting with 'z':" << endl;
     for (const auto& [id, value] : zVariables) {
         cout << id << ": " << value << endl;
     }
-
     string binaryNumber;
     for (const auto& [id, value] : zVariables) {
         binaryNumber += to_string(value);
     }
-
-    cout << "+————————————————————————————————————————————————————————————————————————————————————————————————————+" << endl;
-
-    long long decimalNumber = stoll(binaryNumber, nullptr, 2);
-    cout << "| Binary number: " << binaryNumber << "                                      |" << endl;
-    cout << "| Decimal number: " << decimalNumber << "                                                                     |" <<endl;
 
     //Graphviz
     ofstream dotFile("graph.dot");
@@ -228,16 +219,22 @@ int main() {
         dotFile << "  " << input1 << " -> " << output << " [label=\"" << operation << "\"];" << endl;
         dotFile << "  " << input2 << " -> " << output << " [label=\"" << operation << "\"];" << endl;
     }
-
     dotFile << "}" << endl;
     dotFile.close();
 
-    cout << "| Graph written to graph.dot. Use Graphviz to visualize it (e.g., dot -Tpng graph.dot -o graph.png). |" << endl;
 
-    // Find incorrect registers
+    //PART 2: Find incorrect registers
     vector<string> incorrectRegisters = findIncorrectRegisters(vis_operations);
 
     // Output results
+    cout << "+————————————————————————————————————————————————————————————————————————————————————————————————————+" << endl;
+
+    long long decimalNumber = stoll(binaryNumber, nullptr, 2);
+    cout << "| Binary number: " << binaryNumber << "                                      |" << endl;
+    cout << "| Decimal number: " << decimalNumber << "                                                                     |" <<endl;
+    cout << "| Graph written to graph.dot. Use Graphviz to visualize it (e.g., dot -Tpng graph.dot -o graph.png). |" << endl;
+
+
     cout << "| Incorrect Registers: ";
     for (size_t i = 0; i < incorrectRegisters.size(); ++i) {
         cout << incorrectRegisters[i];
